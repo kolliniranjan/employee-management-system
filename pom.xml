@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        Parent POM: spring-boot-starter-parent
+        Purpose:
+        - Provides dependency version management (we don't have to specify versions
+          for most Spring dependencies; they are inherited from this BOM).
+        - Provides default plugin configuration (e.g., compiler source/target, packaging).
+        - Provides sensible default properties (encoding, resource filtering).
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.5</version>
+        <relativePath/> <!-- lookup parent from Maven repository, not local filesystem -->
+    </parent>
+
+    <groupId>com.employee</groupId>
+    <artifactId>employee-management-system</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>employee-management-system</name>
+    <description>Enterprise-grade Employee Management System (Java Full Stack)</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+
+        <!-- ============ WEB LAYER ============ -->
+        <!-- Provides Spring MVC (DispatcherServlet, @RestController, @RequestMapping)
+             + embedded Tomcat server so the app runs standalone (no external server needed). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- ============ PERSISTENCE LAYER ============ -->
+        <!-- Provides Spring Data JPA (repository abstraction: JpaRepository, CrudRepository)
+             and pulls in Hibernate as the default JPA provider (ORM implementation). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- MySQL JDBC Driver: the actual client library that lets the JVM
+             communicate with a MySQL database over the network. -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- ============ VALIDATION ============ -->
+        <!-- Jakarta Bean Validation (Hibernate Validator implementation).
+             Enables annotations like @NotNull, @Size, @Email on DTOs,
+             automatically triggered by @Valid in controllers. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- ============ BOILERPLATE REDUCTION ============ -->
+        <!-- Lombok: annotation processor (compile-time only) that generates
+             getters, setters, constructors, equals/hashCode, toString, builders. -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- ============ DEVELOPER PRODUCTIVITY ============ -->
+        <!-- Enables automatic application restart on classpath changes during development.
+             Excluded from the final production artifact automatically by Spring Boot. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- ============ TESTING ============ -->
+        <!-- Brings JUnit 5, Mockito, AssertJ, and Spring Test for unit/integration tests. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <finalName>employee-management-system</finalName>
+        <plugins>
+            <!-- Packages the app as an executable "fat jar" containing all dependencies
+                 + an embedded Tomcat server, and enables `mvn spring-boot:run`. -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!-- Lombok is compile-time only; it must NOT be bundled into the runtime jar. -->
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
