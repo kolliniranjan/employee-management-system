@@ -13,10 +13,13 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-public interface EmployeeRepository extends JpaRepository<Employee, Long>,
-        JpaSpecificationExecutor<Employee> {
+public interface EmployeeRepository
+        extends JpaRepository<Employee, Long>,
+                JpaSpecificationExecutor<Employee> {
 
-    // Derived Query Methods
+    // ==========================================
+    // EXISTING DERIVED QUERY METHODS
+    // ==========================================
 
     Optional<Employee> findByEmployeeCode(String employeeCode);
 
@@ -28,36 +31,130 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long>,
 
     List<Employee> findByStatus(EmployeeStatus status);
 
-    Page<Employee> findByStatus(EmployeeStatus status, Pageable pageable);
+    Page<Employee> findByStatus(
+            EmployeeStatus status,
+            Pageable pageable
+    );
 
-    List<Employee> findByDepartment_DepartmentName(String departmentName);
+    List<Employee> findByDepartment_DepartmentName(
+            String departmentName
+    );
 
-    List<Employee> findByFirstNameContainingIgnoreCase(String firstName);
+    List<Employee> findByFirstNameContainingIgnoreCase(
+            String firstName
+    );
 
-    // JPQL Queries
+
+    // ==========================================
+    // ORGANIZATION-AWARE QUERIES
+    // ==========================================
+
+    List<Employee> findByOrganizationId(
+            Long organizationId
+    );
+
+    Optional<Employee> findByIdAndOrganizationId(
+            Long id,
+            Long organizationId
+    );
+
+    List<Employee> findByOrganizationIdAndFirstNameContainingIgnoreCase(
+            Long organizationId,
+            String firstName
+    );
+
+    List<Employee> findByOrganizationIdAndStatus(
+            Long organizationId,
+            EmployeeStatus status
+    );
+
+    List<Employee> findByOrganizationIdAndDepartment_DepartmentName(
+            Long organizationId,
+            String departmentName
+    );
+
+    Page<Employee> findByOrganizationId(
+            Long organizationId,
+            Pageable pageable
+    );
+
+
+    // ==========================================
+    // ORGANIZATION + STATUS + PAGINATION
+    // ==========================================
+
+    Page<Employee> findByOrganizationIdAndStatus(
+            Long organizationId,
+            EmployeeStatus status,
+            Pageable pageable
+    );
+
+
+    // ==========================================
+    // JPQL QUERIES
+    // ==========================================
 
     @Query("""
         SELECT e
         FROM Employee e
         WHERE e.salary > :salary
     """)
-    List<Employee> findEmployeesWithSalaryGreaterThan(@Param("salary") BigDecimal salary);
+    List<Employee> findEmployeesWithSalaryGreaterThan(
+            @Param("salary") BigDecimal salary
+    );
+
 
     @Query("""
         SELECT e
         FROM Employee e
         WHERE e.department.departmentName = :department
     """)
-    List<Employee> findEmployeesByDepartment(@Param("department") String department);
+    List<Employee> findEmployeesByDepartment(
+            @Param("department") String department
+    );
+
 
     @Query("""
         SELECT COUNT(e)
         FROM Employee e
         WHERE e.status = :status
     """)
-    Long countEmployeesByStatus(@Param("status") EmployeeStatus status);
+    Long countEmployeesByStatus(
+            @Param("status") EmployeeStatus status
+    );
 
-    // Native SQL Query
+
+    // ==========================================
+    // ORGANIZATION JPQL QUERIES
+    // ==========================================
+
+    @Query("""
+        SELECT e
+        FROM Employee e
+        WHERE e.organization.id = :organizationId
+          AND e.salary > :salary
+    """)
+    List<Employee> findEmployeesWithSalaryGreaterThanByOrganization(
+            @Param("organizationId") Long organizationId,
+            @Param("salary") BigDecimal salary
+    );
+
+
+    @Query("""
+        SELECT COUNT(e)
+        FROM Employee e
+        WHERE e.organization.id = :organizationId
+          AND e.status = :status
+    """)
+    Long countEmployeesByOrganizationAndStatus(
+            @Param("organizationId") Long organizationId,
+            @Param("status") EmployeeStatus status
+    );
+
+
+    // ==========================================
+    // NATIVE SQL QUERY
+    // ==========================================
 
     @Query(value = """
         SELECT *
@@ -66,4 +163,20 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long>,
         LIMIT 5
         """, nativeQuery = true)
     List<Employee> findTopFiveHighestSalaryEmployees();
+
+
+    // ==========================================
+    // ORGANIZATION TOP 5
+    // ==========================================
+
+    @Query(value = """
+        SELECT *
+        FROM employees
+        WHERE organization_id = :organizationId
+        ORDER BY salary DESC
+        LIMIT 5
+        """, nativeQuery = true)
+    List<Employee> findTopFiveHighestSalaryEmployeesByOrganization(
+            @Param("organizationId") Long organizationId
+    );
 }

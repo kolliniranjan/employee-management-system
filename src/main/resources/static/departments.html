@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Departments | Employee Management System</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        rel="stylesheet">
+
+    <link
+        rel="stylesheet"
+        href="css/style.css">
+
+</head>
+
+<body class="dashboard-body">
+
+
+<!-- ==========================================
+     SIDEBAR
+     ========================================== -->
+
+<div class="sidebar" id="sidebar">
+
+    <div class="sidebar-brand">
+
+        <div class="brand-icon-small">
+            EMS
+        </div>
+
+        <div>
+
+            <h5>Employee MS</h5>
+
+            <small>
+                Management System
+            </small>
+
+        </div>
+
+    </div>
+
+
+    <hr>
+
+
+    <nav class="sidebar-nav">
+
+        <a
+            href="dashboard.html"
+            class="nav-link">
+
+            <i class="bi bi-grid-1x2-fill"></i>
+
+            Dashboard
+
+        </a>
+
+
+        <a
+            href="employees.html"
+            class="nav-link">
+
+            <i class="bi bi-people-fill"></i>
+
+            Employees
+
+        </a>
+
+
+        <a
+            href="departments.html"
+            class="nav-link active">
+
+            <i class="bi bi-building"></i>
+
+            Departments
+
+        </a>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+        <button
+            id="logoutButton"
+            class="btn btn-outline-light w-100">
+
+            <i class="bi bi-box-arrow-right"></i>
+
+            Logout
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================
+     MAIN CONTENT
+     ========================================== -->
+
+<div class="main-content">
+
+
+    <!-- TOP NAVBAR -->
+
+    <nav class="top-navbar">
+
+        <button
+            id="sidebarToggle"
+            class="btn btn-light d-lg-none">
+
+            <i class="bi bi-list"></i>
+
+        </button>
+
+
+        <div>
+
+            <h5 class="mb-0">
+                Departments
+            </h5>
+
+            <small class="text-muted">
+                Manage company departments
+            </small>
+
+        </div>
+
+
+        <div class="user-info ms-auto">
+
+            <div class="user-avatar">
+
+                <i class="bi bi-person-fill"></i>
+
+            </div>
+
+
+            <div>
+
+                <strong id="userEmail">
+                    User
+                </strong>
+
+                <small
+                    id="userRole"
+                    class="d-block text-muted">
+
+                    Role
+
+                </small>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+    <!-- ==========================================
+         CONTENT
+         ========================================== -->
+
+    <main class="container-fluid dashboard-container">
+
+        <div class="content-card">
+
+
+            <!-- HEADER -->
+
+            <div class="employee-toolbar">
+
+                <div>
+
+                    <h4 class="mb-1">
+                        Department List
+                    </h4>
+
+                    <p class="text-muted mb-0">
+                        View and manage all departments
+                    </p>
+
+                </div>
+
+
+                <button
+                    id="addDepartmentButton"
+                    class="btn btn-primary">
+
+                    <i class="bi bi-plus-lg"></i>
+
+                    Add Department
+
+                </button>
+
+            </div>
+
+
+            <!-- SEARCH -->
+
+            <div class="row mt-4 mb-3">
+
+                <div class="col-md-6">
+
+                    <div class="input-group">
+
+                        <span class="input-group-text">
+
+                            <i class="bi bi-search"></i>
+
+                        </span>
+
+
+                        <input
+                            type="text"
+                            id="searchInput"
+                            class="form-control"
+                            placeholder="Search department">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ERROR -->
+
+            <div
+                id="errorMessage"
+                class="alert alert-danger d-none">
+            </div>
+
+
+            <!-- LOADING -->
+
+            <div
+                id="loadingMessage"
+                class="text-center py-5">
+
+                <div
+                    class="spinner-border text-primary">
+                </div>
+
+                <p class="text-muted mt-2">
+                    Loading departments...
+                </p>
+
+            </div>
+
+
+            <!-- TABLE -->
+
+            <div
+                id="tableContainer"
+                class="table-responsive d-none">
+
+                <table class="table align-middle">
+
+                    <thead>
+
+                    <tr>
+
+                        <th>ID</th>
+
+                        <th>Department Code</th>
+
+                        <th>Department Name</th>
+
+                        <th>Description</th>
+
+                        <th>Actions</th>
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody
+                        id="departmentTableBody">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+<!-- =========================
+     ADD DEPARTMENT MODAL
+     ========================= -->
+
+<div
+    class="modal fade"
+    id="addDepartmentModal"
+    tabindex="-1"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <div>
+                    <h5 class="modal-title">
+                        Add Department
+                    </h5>
+
+                    <small class="text-muted">
+                        Create a new department
+                    </small>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+
+            <div class="modal-body">
+
+                <div
+                    id="addDepartmentError"
+                    class="alert alert-danger d-none">
+                </div>
+
+
+                <form id="addDepartmentForm">
+
+                    <div class="mb-3">
+
+                        <label
+                            for="departmentCode"
+                            class="form-label">
+
+                            Department Code
+
+                        </label>
+
+                        <input
+                            type="text"
+                            id="departmentCode"
+                            class="form-control"
+                            placeholder="HR001"
+                            required>
+
+                    </div>
+
+
+                    <div class="mb-3">
+
+                        <label
+                            for="departmentName"
+                            class="form-label">
+
+                            Department Name
+
+                        </label>
+
+                        <input
+                            type="text"
+                            id="departmentName"
+                            class="form-control"
+                            placeholder="Human Resources"
+                            required>
+
+                    </div>
+
+
+                    <div class="mb-3">
+
+                        <label
+                            for="departmentDescription"
+                            class="form-label">
+
+                            Description
+
+                        </label>
+
+                        <textarea
+                            id="departmentDescription"
+                            class="form-control"
+                            rows="3"
+                            placeholder="Department description">
+                        </textarea>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+
+                    Cancel
+
+                </button>
+
+                <button
+                    type="submit"
+                    form="addDepartmentForm"
+                    id="saveDepartmentButton"
+                    class="btn btn-primary">
+
+                    <i class="bi bi-check-lg"></i>
+
+                    Save Department
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- =========================
+     EDIT DEPARTMENT MODAL
+     ========================= -->
+
+<div
+    class="modal fade"
+    id="editDepartmentModal"
+    tabindex="-1"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <div>
+                    <h5 class="modal-title">
+                        Edit Department
+                    </h5>
+
+                    <small class="text-muted">
+                        Update department information
+                    </small>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div
+                    id="editDepartmentError"
+                    class="alert alert-danger d-none">
+                </div>
+
+                <form id="editDepartmentForm">
+
+                    <div class="mb-3">
+
+                        <label
+                            for="editDepartmentCode"
+                            class="form-label">
+
+                            Department Code
+
+                        </label>
+
+                        <input
+                            type="text"
+                            id="editDepartmentCode"
+                            class="form-control"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label
+                            for="editDepartmentName"
+                            class="form-label">
+
+                            Department Name
+
+                        </label>
+
+                        <input
+                            type="text"
+                            id="editDepartmentName"
+                            class="form-control"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label
+                            for="editDepartmentDescription"
+                            class="form-label">
+
+                            Description
+
+                        </label>
+
+                        <textarea
+                            id="editDepartmentDescription"
+                            class="form-control"
+                            rows="3">
+                        </textarea>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+
+                    Cancel
+
+                </button>
+
+                <button
+                    type="submit"
+                    form="editDepartmentForm"
+                    id="updateDepartmentButton"
+                    class="btn btn-primary">
+
+                    <i class="bi bi-check-lg"></i>
+                    Update Department
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Bootstrap JS -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+<script src="js/departments.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard | Employee Management System</title>
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="dashboard-body">
+
+<!-- =========================
+     SIDEBAR
+     ========================= -->
+
+<div class="sidebar" id="sidebar">
+
+    <div class="sidebar-brand">
+        <div class="brand-icon-small">
+            EMS
+        </div>
+
+        <div>
+            <h5>Employee MS</h5>
+            <small>Management System</small>
+        </div>
+    </div>
+
+    <hr>
+
+    <nav class="sidebar-nav">
+
+        <a href="dashboard.html" class="nav-link active">
+            <i class="bi bi-grid-1x2-fill"></i>
+            Dashboard
+        </a>
+
+        <a href="employees.html" class="nav-link">
+            <i class="bi bi-people-fill"></i>
+            Employees
+        </a>
+
+        <a href="departments.html" class="nav-link">
+            <i class="bi bi-building"></i>
+            Departments
+        </a>
+        <a
+    href="organization-application.html"
+    class="nav-link"
+    id="applyOrganizationLink">
+
+    <i class="bi bi-building-add"></i>
+    Apply Organization
+
+</a>
+
+
+<a
+    href="applications.html"
+    class="nav-link d-none"
+    id="applicationsLink">
+
+    <i class="bi bi-file-earmark-text-fill"></i>
+    Applications
+
+</a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+        <button
+            id="logoutButton"
+            class="btn btn-outline-light w-100">
+
+            <i class="bi bi-box-arrow-right"></i>
+            Logout
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     MAIN CONTENT
+     ========================= -->
+
+<div class="main-content">
+
+    <!-- Top Navbar -->
+
+    <nav class="top-navbar">
+
+        <button
+            id="sidebarToggle"
+            class="btn btn-light d-lg-none">
+
+            <i class="bi bi-list"></i>
+
+        </button>
+
+        <div>
+
+            <h5 class="mb-0">
+                Dashboard
+            </h5>
+
+            <small class="text-muted">
+                Employee Management Overview
+            </small>
+
+        </div>
+
+        <a
+    href="profile.html"
+    class="user-info ms-auto text-decoration-none">
+
+    <div class="user-avatar">
+
+        <i class="bi bi-person-fill"></i>
+
+    </div>
+
+    <div>
+
+        <strong id="userEmail">
+            User
+        </strong>
+
+        <small
+            id="userRole"
+            class="d-block text-muted">
+            Role
+        </small>
+
+    </div>
+
+</a>
+
+    </nav>
+
+
+    <!-- Page Content -->
+
+    <main class="container-fluid dashboard-container">
+
+        <!-- Welcome -->
+
+        <div class="welcome-section">
+
+            <div>
+
+                <h2>
+                    Welcome back! 👋
+                </h2>
+
+                <p class="text-muted mb-0">
+                    Here's what's happening with your organization.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             STATISTICS
+             ========================= -->
+
+        <div class="row g-4 mt-2">
+
+            <!-- Employees -->
+
+            <div class="col-md-6 col-xl-3">
+
+                <div class="stat-card">
+
+                    <div class="stat-icon blue">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+
+                    <div>
+
+                        <p class="stat-label">
+                            Total Employees
+                        </p>
+
+                        <h3 id="totalEmployees">
+                            --
+                        </h3>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Departments -->
+
+            <div class="col-md-6 col-xl-3">
+
+                <div class="stat-card">
+
+                    <div class="stat-icon purple">
+                        <i class="bi bi-building"></i>
+                    </div>
+
+                    <div>
+
+                        <p class="stat-label">
+                            Departments
+                        </p>
+
+                        <h3 id="totalDepartments">
+                            --
+                        </h3>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Active -->
+
+            <div class="col-md-6 col-xl-3">
+
+                <div class="stat-card">
+
+                    <div class="stat-icon green">
+                        <i class="bi bi-person-check-fill"></i>
+                    </div>
+
+                    <div>
+
+                        <p class="stat-label">
+                            Active Employees
+                        </p>
+
+                        <h3 id="activeEmployees">
+                            --
+                        </h3>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Inactive -->
+
+            <div class="col-md-6 col-xl-3">
+
+                <div class="stat-card">
+
+                    <div class="stat-icon red">
+                        <i class="bi bi-person-x-fill"></i>
+                    </div>
+
+                    <div>
+
+                        <p class="stat-label">
+                            Inactive Employees
+                        </p>
+
+                        <h3 id="inactiveEmployees">
+                            --
+                        </h3>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             RECENT EMPLOYEES
+             ========================= -->
+
+        <div class="content-card mt-4">
+
+            <div class="card-header-custom">
+
+                <div>
+
+                    <h5 class="mb-1">
+                        Recent Employees
+                    </h5>
+
+                    <p class="text-muted mb-0">
+                        Employees currently registered in the system
+                    </p>
+
+                </div>
+
+                <a
+    href="employees.html"
+    class="btn btn-primary view-all-btn">
+
+    View All
+    <i class="bi bi-arrow-right ms-2"></i>
+
+</a>
+
+            </div>
+
+
+            <!-- Loading -->
+
+            <div
+                id="loadingMessage"
+                class="text-center py-5">
+
+                <div
+                    class="spinner-border text-primary"
+                    role="status">
+                </div>
+
+                <p class="text-muted mt-2">
+                    Loading employees...
+                </p>
+
+            </div>
+
+
+            <!-- Error -->
+
+            <div
+                id="dashboardError"
+                class="alert alert-danger d-none">
+            </div>
+
+
+            <!-- Employee Table -->
+
+            <div
+                id="employeeTableContainer"
+                class="table-responsive d-none">
+
+                <table class="table align-middle">
+
+                    <thead>
+
+                    <tr>
+                        <th>Employee</th>
+                        <th>Code</th>
+                        <th>Designation</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                    </tr>
+
+                    </thead>
+
+                    <tbody id="employeeTableBody">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script src="js/dashboard.js"></script>
+
+</body>
+
+</html>

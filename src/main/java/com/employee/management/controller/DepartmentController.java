@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import jakarta.annotation.PostConstruct;
 
 import java.util.List;
 
@@ -16,6 +17,13 @@ import java.util.List;
 public class DepartmentController {
 
     private final DepartmentService departmentService;
+
+    @PostConstruct
+public void init() {
+    System.out.println("======================================");
+    System.out.println("DepartmentController LOADED");
+    System.out.println("======================================");
+}
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

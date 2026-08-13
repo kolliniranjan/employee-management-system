@@ -35,13 +35,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     private final ObjectMapper objectMapper;
 
+
     @Override
-    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+    protected boolean shouldNotFilter(
+            @NonNull HttpServletRequest request) {
 
         String path = request.getServletPath();
 
         return path.startsWith("/api/auth/");
     }
+
 
     @Override
     protected void doFilterInternal(
@@ -50,77 +53,204 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        String authHeader =
+                request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+
+        // ==========================================
+        // NO JWT TOKEN
+        // ==========================================
+
+        if (authHeader == null ||
+                !authHeader.startsWith(BEARER_PREFIX)) {
+
+            log.debug(
+                    "No JWT token found for request: {} {}",
+                    request.getMethod(),
+                    request.getRequestURI()
+            );
 
             filterChain.doFilter(request, response);
             return;
-
         }
 
-        String jwt = authHeader.substring(BEARER_PREFIX.length());
+
+        // ==========================================
+        // EXTRACT JWT
+        // ==========================================
+
+        String jwt =
+                authHeader.substring(BEARER_PREFIX.length());
+
 
         try {
 
-            String username = jwtService.extractUsername(jwt);
+            String username =
+                    jwtService.extractUsername(jwt);
+
+
+            // ==========================================
+            // LOAD USER
+            // ==========================================
 
             if (username != null &&
-                    SecurityContextHolder.getContext().getAuthentication() == null) {
+                    SecurityContextHolder
+                            .getContext()
+                            .getAuthentication() == null) {
 
                 UserDetails userDetails =
-                        userDetailsService.loadUserByUsername(username);
+                        userDetailsService
+                                .loadUserByUsername(username);
 
-                if (jwtService.isTokenValid(jwt, userDetails)) {
+
+                // ==========================================
+                // DEBUG USER AUTHORITY
+                // ==========================================
+
+                log.info("======================================");
+                log.info(
+                        "JWT USER       : {}",
+                        userDetails.getUsername()
+                );
+                log.info(
+                        "JWT AUTHORITIES: {}",
+                        userDetails.getAuthorities()
+                );
+                log.info(
+                        "REQUEST        : {} {}",
+                        request.getMethod(),
+                        request.getRequestURI()
+                );
+                log.info("======================================");
+
+
+                // ==========================================
+                // VALIDATE TOKEN
+                // ==========================================
+
+                if (jwtService.isTokenValid(
+                        jwt,
+                        userDetails)) {
+
+
+                    // ==========================================
+                    // CREATE AUTHENTICATION
+                    // ==========================================
 
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
                                     userDetails,
                                     null,
-                                    userDetails.getAuthorities());
+                                    userDetails.getAuthorities()
+                            );
+
 
                     authToken.setDetails(
                             new WebAuthenticationDetailsSource()
-                                    .buildDetails(request));
+                                    .buildDetails(request)
+                    );
+
+
+                    // ==========================================
+                    // SET SECURITY CONTEXT
+                    // ==========================================
 
                     SecurityContextHolder
                             .getContext()
                             .setAuthentication(authToken);
 
+
+                    // ==========================================
+                    // VERIFY SECURITY CONTEXT
+                    // ==========================================
+
+                    log.info(
+                            "SECURITY CONTEXT AUTHORITIES: {}",
+                            SecurityContextHolder
+                                    .getContext()
+                                    .getAuthentication()
+                                    .getAuthorities()
+                    );
+
+                    log.info(
+                            "JWT authentication successful for: {}",
+                            username
+                    );
+
+                } else {
+
+                    log.warn(
+                            "JWT validation failed for user: {}",
+                            username
+                    );
                 }
             }
 
+
+            // ==========================================
+            // CONTINUE REQUEST
+            // ==========================================
+
             filterChain.doFilter(request, response);
+
 
         } catch (Exception ex) {
 
-            log.error("JWT Authentication Error : {}", ex.getMessage());
+            log.error(
+                    "JWT Authentication Error: {}",
+                    ex.getMessage(),
+                    ex
+            );
 
             sendUnauthorizedResponse(response);
-
         }
     }
+
+
+    // ==========================================
+    // UNAUTHORIZED RESPONSE
+    // ==========================================
 
     private void sendUnauthorizedResponse(
             HttpServletResponse response)
             throws IOException {
 
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setStatus(
+                HttpStatus.UNAUTHORIZED.value()
+        );
 
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setContentType(
+                MediaType.APPLICATION_JSON_VALUE
+        );
 
-        Map<String, Object> body = new LinkedHashMap<>();
 
-        body.put("timestamp", LocalDateTime.now());
+        Map<String, Object> body =
+                new LinkedHashMap<>();
 
-        body.put("status", HttpStatus.UNAUTHORIZED.value());
+        body.put(
+                "timestamp",
+                LocalDateTime.now()
+        );
 
-        body.put("error", "Unauthorized");
+        body.put(
+                "status",
+                HttpStatus.UNAUTHORIZED.value()
+        );
 
-        body.put("message", "Invalid or Expired JWT Token");
+        body.put(
+                "error",
+                "Unauthorized"
+        );
 
-        objectMapper.writeValue(response.getOutputStream(), body);
+        body.put(
+                "message",
+                "Invalid or Expired JWT Token"
+        );
 
+
+        objectMapper.writeValue(
+                response.getOutputStream(),
+                body
+        );
     }
-
 }

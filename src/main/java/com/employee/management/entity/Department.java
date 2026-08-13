@@ -14,13 +14,13 @@ import java.util.List;
 
 @Entity
 @Table(
-        name = "departments",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_department_code",
-                        columnNames = "department_code"
-                )
-        }
+    name = "departments",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_department_code",
+            columnNames = "department_code"
+        )
+    }
 )
 @EntityListeners(AuditingEntityListener.class)
 @Getter
@@ -28,36 +28,101 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = "employees")
+@ToString
 public class Department {
+
+    // ==========================================
+    // PRIMARY KEY
+    // ==========================================
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
+    // ==========================================
+    // DEPARTMENT CODE
+    // ==========================================
+
     @NotBlank(message = "Department code is required")
     @Size(min = 2, max = 20)
-    @Column(name = "department_code", nullable = false, length = 20)
+    @Column(
+        name = "department_code",
+        nullable = false,
+        length = 20
+    )
     private String departmentCode;
+
+
+    // ==========================================
+    // DEPARTMENT NAME
+    // ==========================================
 
     @NotBlank(message = "Department name is required")
     @Size(max = 100)
-    @Column(name = "department_name", nullable = false, length = 100)
+    @Column(
+        name = "department_name",
+        nullable = false,
+        length = 100
+    )
     private String departmentName;
+
+
+    // ==========================================
+    // DESCRIPTION
+    // ==========================================
 
     @Size(max = 255)
     @Column(length = 255)
     private String description;
 
-    @OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
+
+    // ==========================================
+    // ORGANIZATION
+    // ==========================================
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+        name = "organization_id",
+        foreignKey = @ForeignKey(
+            name = "fk_department_organization"
+        )
+    )
+    @ToString.Exclude
+    private Organization organization;
+
+
+    // ==========================================
+    // EMPLOYEES
+    // ==========================================
+
+    @OneToMany(
+        mappedBy = "department",
+        fetch = FetchType.LAZY
+    )
     @Builder.Default
-    private List<Employee> employees = new ArrayList<>();
+    @ToString.Exclude
+    private List<Employee> employees =
+            new ArrayList<>();
+
+
+    // ==========================================
+    // AUDITING
+    // ==========================================
 
     @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(
+        name = "created_at",
+        nullable = false,
+        updatable = false
+    )
     private LocalDateTime createdAt;
 
+
     @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
+    @Column(
+        name = "updated_at",
+        nullable = false
+    )
     private LocalDateTime updatedAt;
 }
