@@ -11,6 +11,7 @@ import com.employee.management.repository.OrganizationApplicationRepository;
 import com.employee.management.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.employee.management.entity.enums.Role;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -213,12 +214,15 @@ public class OrganizationApplicationService {
 
 
         // ==========================================
-        // ASSIGN APPLICANT TO NEW ORGANIZATION
-        // ==========================================
+// ASSIGN APPLICANT TO NEW ORGANIZATION
+// ==========================================
 
-        applicant.setOrganization(organization);
+applicant.setOrganization(organization);
 
-        userRepository.save(applicant);
+// Approved organization applicant becomes EMPLOYEE
+applicant.setRole(Role.EMPLOYEE);
+
+userRepository.save(applicant);
 
 
         // ==========================================

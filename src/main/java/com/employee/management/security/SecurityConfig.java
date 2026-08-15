@@ -28,38 +28,54 @@ public class SecurityConfig {
 
 
     // ==========================================
-    // PUBLIC ENDPOINTS
-    // ==========================================
+// PUBLIC ENDPOINTS
+// ==========================================
 
-    private static final String[] PUBLIC_ENDPOINTS = {
+private static final String[] PUBLIC_ENDPOINTS = {
 
-            // Authentication
-            "/api/auth/register",
-            "/api/auth/login",
+        // ==========================================
+        // AUTHENTICATION
+        // ==========================================
 
-            // Frontend pages
-            "/",
-            "/login.html",
-            "/register.html",
-            "/dashboard.html",
-            "/employees.html",
-            "/departments.html",
-            "/profile.html",
-            "/organization-application.html",
-            "/applications.html",
+        "/api/auth/register",
+        "/api/auth/login",
 
-            // Frontend resources
-            "/css/**",
-            "/js/**",
-            "/images/**",
-            "/favicon.ico",
 
-            // Swagger
-            "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/v3/api-docs/**",
-            "/webjars/**"
-    };
+        // ==========================================
+        // FRONTEND PAGES
+        // ==========================================
+
+        "/",
+        "/login.html",
+        "/register.html",
+        "/dashboard.html",
+        "/employees.html",
+        "/departments.html",
+        "/profile.html",
+        "/change-password.html",
+        "/organization-application.html",
+        "/applications.html",
+
+
+        // ==========================================
+        // FRONTEND RESOURCES
+        // ==========================================
+
+        "/css/**",
+        "/js/**",
+        "/images/**",
+        "/favicon.ico",
+
+
+        // ==========================================
+        // SWAGGER
+        // ==========================================
+
+        "/swagger-ui/**",
+        "/swagger-ui.html",
+        "/v3/api-docs/**",
+        "/webjars/**"
+};
 
 
     // ==========================================
@@ -308,6 +324,30 @@ public class SecurityConfig {
         "/api/admin/**"
 )
 .hasRole("ADMIN")
+// ==========================================
+// ORGANIZATION
+// ==========================================
+
+// Authenticated users can view their organization
+.requestMatchers(
+        HttpMethod.GET,
+        "/api/organizations/my"
+)
+.hasAnyRole(
+        "ADMIN",
+        "EMPLOYEE"
+)
+
+// Organization owner can update
+// Actual owner validation is handled by service
+.requestMatchers(
+        HttpMethod.PUT,
+        "/api/organizations/my"
+)
+.hasAnyRole(
+        "ADMIN",
+        "EMPLOYEE"
+)
                         // ==================================
                         // EVERYTHING ELSE
                         // ==================================

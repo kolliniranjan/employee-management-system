@@ -1,13 +1,14 @@
 package com.employee.management.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
-
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -152,6 +153,53 @@ public ResponseEntity<ErrorResponse> handleIllegalStateException(
     return new ResponseEntity<>(
             response,
             HttpStatus.BAD_REQUEST
+    );
+}
+        // ==========================================
+// DATABASE CONSTRAINT VIOLATION - 409
+// ==========================================
+
+@ExceptionHandler(DataIntegrityViolationException.class)
+public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+        DataIntegrityViolationException ex,
+        HttpServletRequest request) {
+
+    String message = "Duplicate or invalid data.";
+
+    String errorMessage = ex.getMessage();
+
+    if (errorMessage != null &&
+            errorMessage.contains("uk_department_code")) {
+
+        message = "Department code already exists.";
+
+    } else if (errorMessage != null &&
+            errorMessage.contains("uk_department_name")) {
+
+        message = "Department name already exists.";
+
+    } else if (errorMessage != null &&
+            errorMessage.contains("uk_employee_code")) {
+
+        message = "Employee code already exists.";
+
+    } else if (errorMessage != null &&
+            errorMessage.contains("uk_employee_email")) {
+
+        message = "Employee email already exists.";
+    }
+
+    ErrorResponse response = ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.CONFLICT.value())
+            .error("Duplicate Resource")
+            .message(message)
+            .path(request.getRequestURI())
+            .build();
+
+    return new ResponseEntity<>(
+            response,
+            HttpStatus.CONFLICT
     );
 }
     // ==========================================

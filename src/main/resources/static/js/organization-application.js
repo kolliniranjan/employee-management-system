@@ -1,24 +1,27 @@
 // ==========================================
-// ORGANIZATION APPLICATION
+// EMS - ORGANIZATION APPLICATION
+// ==========================================
+
+// ==========================================
+// AUTH CHECK
 // ==========================================
 
 const token = localStorage.getItem("token");
 
-
-// ==========================================
-// AUTHENTICATION CHECK
-// ==========================================
-
 if (!token) {
-
     window.location.href = "login.html";
-
 }
 
 
 // ==========================================
 // ELEMENTS
 // ==========================================
+
+const userEmail =
+    document.getElementById("userEmail");
+
+const userRole =
+    document.getElementById("userRole");
 
 const applicationForm =
     document.getElementById(
@@ -40,43 +43,36 @@ const applicationSuccess =
         "applicationSuccess"
     );
 
-const statusSection =
+const applicationStatusSection =
     document.getElementById(
         "applicationStatusSection"
     );
 
-const statusCard =
+const applicationStatusCard =
     document.getElementById(
         "applicationStatusCard"
     );
 
-const userEmail =
-    document.getElementById(
-        "userEmail"
-    );
-
-const userRole =
-    document.getElementById(
-        "userRole"
-    );
-
 
 // ==========================================
-// GET USER INFORMATION FROM JWT
+// GET JWT PAYLOAD
 // ==========================================
 
 function getTokenPayload() {
 
     try {
 
-        return JSON.parse(
-            atob(
-                token
-                    .split(".")[1]
-                    .replace(/-/g, "+")
-                    .replace(/_/g, "/")
-            )
-        );
+        const payload =
+            JSON.parse(
+                atob(
+                    token
+                        .split(".")[1]
+                        .replace(/-/g, "+")
+                        .replace(/_/g, "/")
+                )
+            );
+
+        return payload;
 
     } catch (error) {
 
@@ -85,87 +81,368 @@ function getTokenPayload() {
             error
         );
 
-        return null;
+        return {};
 
     }
 
 }
 
+
+// ==========================================
+// LOAD USER INFORMATION
+// ==========================================
 
 function loadUserInformation() {
 
     const payload =
         getTokenPayload();
 
-    if (!payload) {
-        return;
-    }
-
     userEmail.textContent =
         payload.sub || "User";
 
     userRole.textContent =
-        payload.role ||
-        "Authenticated User";
+        payload.role || "Authenticated";
 
 }
 
 
 // ==========================================
-// AUTHORIZED API REQUEST
+// HIDE MESSAGES
 // ==========================================
 
-async function apiRequest(
-    url,
-    options = {}
-) {
+function clearMessages() {
 
-    const response =
-        await fetch(
-            url,
-            {
-                ...options,
+    applicationError.classList.add(
+        "d-none"
+    );
 
-                headers: {
+    applicationSuccess.classList.add(
+        "d-none"
+    );
 
-                    "Authorization":
-                        `Bearer ${token}`,
+}
 
-                    "Content-Type":
-                        "application/json",
 
-                    ...(options.headers || {})
+// ==========================================
+// SHOW ERROR
+// ==========================================
 
-                }
+function showError(message) {
 
-            }
+    applicationError.textContent =
+        message;
+
+    applicationError.classList.remove(
+        "d-none"
+    );
+
+    applicationSuccess.classList.add(
+        "d-none"
+    );
+
+}
+
+
+// ==========================================
+// SHOW SUCCESS
+// ==========================================
+
+function showSuccess(message) {
+
+    applicationSuccess.textContent =
+        message;
+
+    applicationSuccess.classList.remove(
+        "d-none"
+    );
+
+    applicationError.classList.add(
+        "d-none"
+    );
+
+}
+
+
+// ==========================================
+// STATUS BADGE
+// ==========================================
+
+function getStatusBadge(status) {
+
+    switch (status) {
+
+        case "APPROVED":
+
+            return `
+                <span class="badge bg-success">
+                    <i class="bi bi-check-circle me-1"></i>
+                    APPROVED
+                </span>
+            `;
+
+        case "REJECTED":
+
+            return `
+                <span class="badge bg-danger">
+                    <i class="bi bi-x-circle me-1"></i>
+                    REJECTED
+                </span>
+            `;
+
+        case "PENDING":
+
+            return `
+                <span class="badge bg-warning text-dark">
+                    <i class="bi bi-clock me-1"></i>
+                    PENDING
+                </span>
+            `;
+
+        default:
+
+            return `
+                <span class="badge bg-secondary">
+                    ${status || "UNKNOWN"}
+                </span>
+            `;
+    }
+
+}
+
+
+// ==========================================
+// DISPLAY APPLICATION STATUS
+// ==========================================
+
+// ==========================================
+// DISPLAY APPLICATION HISTORY
+// ==========================================
+
+function displayApplicationHistory(applications) {
+
+    if (!applications || applications.length === 0) {
+
+        applicationStatusSection.classList.add("d-none");
+
+        return;
+    }
+
+    applicationStatusSection.classList.remove("d-none");
+
+    applicationStatusCard.innerHTML = `
+
+        <div class="mb-3">
+
+            <h6 class="fw-bold">
+                <i class="bi bi-clock-history me-2"></i>
+                Application History
+            </h6>
+
+            <small class="text-muted">
+                All organization applications submitted by you
+            </small>
+
+        </div>
+
+        ${applications.map(application => `
+
+            <div class="border rounded p-3 mb-3">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <div>
+
+                        <h6 class="mb-1 fw-bold">
+                            ${application.organizationName}
+                        </h6>
+
+                        <small class="text-muted">
+                            Application ID: #${application.id}
+                        </small>
+
+                    </div>
+
+                    <div>
+                        ${getStatusBadge(application.status)}
+                    </div>
+
+                </div>
+
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted">
+                            Organization Type
+                        </small>
+
+                        <div class="fw-semibold">
+                            ${application.organizationType}
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted">
+                            Your Position
+                        </small>
+
+                        <div class="fw-semibold">
+                            ${application.applicantPosition}
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted">
+                            Contact Number
+                        </small>
+
+                        <div class="fw-semibold">
+                            ${application.contactNumber}
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted">
+                            Applied At
+                        </small>
+
+                        <div class="fw-semibold">
+                            ${formatDate(application.appliedAt)}
+                        </div>
+
+                    </div>
+
+
+                    ${
+                        application.reviewedAt
+                        ? `
+                            <div class="col-md-6">
+
+                                <small class="text-muted">
+                                    Reviewed At
+                                </small>
+
+                                <div class="fw-semibold">
+                                    ${formatDate(application.reviewedAt)}
+                                </div>
+
+                            </div>
+                        `
+                        : ""
+                    }
+
+
+                    ${
+                        application.reason
+                        ? `
+                            <div class="col-12">
+
+                                <small class="text-muted">
+                                    Reason
+                                </small>
+
+                                <div class="mt-1">
+                                    ${application.reason}
+                                </div>
+
+                            </div>
+                        `
+                        : ""
+                    }
+
+                </div>
+
+            </div>
+
+        `).join("")}
+
+    `;
+}
+
+// ==========================================
+// FORMAT DATE
+// ==========================================
+
+function formatDate(dateValue) {
+
+    if (!dateValue) {
+        return "-";
+    }
+
+    try {
+
+        return new Date(
+            dateValue
+        ).toLocaleString("en-IN");
+
+    } catch (error) {
+
+        return dateValue;
+    }
+
+}
+
+
+// ==========================================
+// LOAD MY APPLICATION
+// ==========================================
+
+async function loadMyApplication() {
+
+    try {
+
+        const data =
+            await apiGet(
+                "/organization-applications/my"
+            );
+
+        if (!data) {
+            return;
+        }
+
+        const applications =
+            Array.isArray(data)
+                ? data
+                : [];
+
+        if (applications.length === 0) {
+
+            applicationStatusSection.classList.add(
+                "d-none"
+            );
+
+            return;
+        }
+
+        displayApplicationHistory(
+            applications
         );
 
+    } catch (error) {
 
-    // ======================================
-    // AUTHENTICATION ERROR
-    // ======================================
+        console.error(
+            "Unable to load applications:",
+            error
+        );
 
-    if (
-        response.status === 401 ||
-        response.status === 403
-    ) {
-
-        localStorage.removeItem("token");
-        localStorage.removeItem("tokenType");
-
-        window.location.href =
-            "login.html";
-
-        return null;
+        showError(
+            error.message ||
+            "Unable to load application history."
+        );
 
     }
 
-
-    return response;
-
 }
-
 
 // ==========================================
 // SUBMIT APPLICATION
@@ -177,20 +454,11 @@ applicationForm.addEventListener(
 
         event.preventDefault();
 
-
-        // Clear previous messages
-
-        applicationError.classList.add(
-            "d-none"
-        );
-
-        applicationSuccess.classList.add(
-            "d-none"
-        );
+        clearMessages();
 
 
         // ======================================
-        // GET FORM VALUES
+        // READ FORM VALUES
         // ======================================
 
         const organizationName =
@@ -238,7 +506,7 @@ applicationForm.addEventListener(
 
 
         // ======================================
-        // CLIENT-SIDE VALIDATION
+        // BASIC VALIDATION
         // ======================================
 
         if (!organizationName) {
@@ -248,7 +516,6 @@ applicationForm.addEventListener(
             );
 
             return;
-
         }
 
 
@@ -259,18 +526,16 @@ applicationForm.addEventListener(
             );
 
             return;
-
         }
 
 
         if (!applicantPosition) {
 
             showError(
-                "Your position is required."
+                "Applicant position is required."
             );
 
             return;
-
         }
 
 
@@ -281,30 +546,14 @@ applicationForm.addEventListener(
             );
 
             return;
-
         }
-
-
-        // ======================================
-        // DISABLE BUTTON
-        // ======================================
-
-        submitButton.disabled = true;
-
-        submitButton.innerHTML = `
-            <span
-                class="spinner-border spinner-border-sm me-2">
-            </span>
-
-            Submitting...
-        `;
 
 
         // ======================================
         // REQUEST BODY
         // ======================================
 
-        const requestBody = {
+        const applicationData = {
 
             organizationName:
                 organizationName,
@@ -324,89 +573,73 @@ applicationForm.addEventListener(
         };
 
 
+        // ======================================
+        // BUTTON LOADING
+        // ======================================
+
+        submitButton.disabled = true;
+
+        submitButton.innerHTML = `
+            <span
+                class="spinner-border spinner-border-sm me-1">
+            </span>
+            Submitting...
+        `;
+
+
         try {
 
-            const response =
-                await apiRequest(
-                    "/api/organization-applications",
-                    {
-                        method: "POST",
-
-                        body:
-                            JSON.stringify(
-                                requestBody
-                            )
-                    }
-                );
-
-
-            if (!response) {
-                return;
-            }
-
+            // ==================================
+            // POST APPLICATION
+            // ==================================
 
             const data =
-                await response
-                    .json()
-                    .catch(() => null);
-
-
-            // ==================================
-            // BACKEND ERROR
-            // ==================================
-
-            if (!response.ok) {
-
-                throw new Error(
-                    data?.message ||
-                    "Unable to submit application."
+                await apiPost(
+                    "/organization-applications",
+                    applicationData
                 );
-
-            }
 
 
             // ==================================
             // SUCCESS
             // ==================================
 
-            applicationSuccess.textContent =
-                "Application submitted successfully. Your application is now pending review.";
-
-            applicationSuccess.classList.remove(
-                "d-none"
+            showSuccess(
+                "Organization application submitted successfully."
             );
-
-
-            // Clear form
-
-            applicationForm.reset();
 
 
             // Display returned application
 
-            renderApplicationStatus(
-                data
-            );
+            if (data) {
+
+    await loadMyApplication();
+
+}
+
+
+            // Reset form
+
+            applicationForm.reset();
 
 
         } catch (error) {
 
             console.error(
-                "Application submission error:",
+                "Application submission failed:",
                 error
             );
 
 
             showError(
                 error.message ||
-                "Unable to submit application."
+                "Unable to submit organization application."
             );
 
 
         } finally {
 
-            submitButton.disabled =
-                false;
+            submitButton.disabled = false;
 
             submitButton.innerHTML = `
                 <i class="bi bi-send me-1"></i>
@@ -420,237 +653,6 @@ applicationForm.addEventListener(
 
 
 // ==========================================
-// LOAD MY APPLICATIONS
-// ==========================================
-
-async function loadMyApplications() {
-
-    try {
-
-        const response =
-            await apiRequest(
-                "/api/organization-applications/my"
-            );
-
-
-        if (!response) {
-            return;
-        }
-
-
-        const data =
-            await response
-                .json()
-                .catch(() => null);
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                data?.message ||
-                "Unable to load applications."
-            );
-
-        }
-
-
-        if (
-            Array.isArray(data) &&
-            data.length > 0
-        ) {
-
-            // Show the latest application
-
-            const latestApplication =
-                data[data.length - 1];
-
-            renderApplicationStatus(
-                latestApplication
-            );
-
-        }
-
-
-    } catch (error) {
-
-        console.error(
-            "Unable to load applications:",
-            error
-        );
-
-    }
-
-}
-
-
-// ==========================================
-// RENDER APPLICATION STATUS
-// ==========================================
-
-function renderApplicationStatus(
-    application
-) {
-
-    if (!application) {
-        return;
-    }
-
-
-    const status =
-        application.status ||
-        "PENDING";
-
-
-    let badgeClass =
-        "bg-warning text-dark";
-
-    let icon =
-        "bi-hourglass-split";
-
-    let message =
-        "Your application is waiting for administrator review.";
-
-
-    if (status === "APPROVED") {
-
-        badgeClass =
-            "bg-success";
-
-        icon =
-            "bi-check-circle-fill";
-
-        message =
-            "Your organization application has been approved.";
-
-    }
-
-
-    if (status === "REJECTED") {
-
-        badgeClass =
-            "bg-danger";
-
-        icon =
-            "bi-x-circle-fill";
-
-        message =
-            "Your organization application has been rejected.";
-
-    }
-
-
-    statusCard.innerHTML = `
-
-        <div
-            class="d-flex align-items-center mb-3">
-
-            <i
-                class="bi ${icon} fs-3 me-3">
-            </i>
-
-            <div>
-
-                <h6 class="mb-1">
-                    ${application.organizationName}
-                </h6>
-
-                <span
-                    class="badge ${badgeClass}">
-
-                    ${status}
-
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <p class="mb-2">
-
-            ${message}
-
-        </p>
-
-
-        <div class="small text-muted">
-
-            <div>
-                <strong>Organization Type:</strong>
-                ${application.organizationType || "-"}
-            </div>
-
-            <div>
-                <strong>Position:</strong>
-                ${application.applicantPosition || "-"}
-            </div>
-
-            <div>
-                <strong>Applied:</strong>
-                ${formatDate(application.appliedAt)}
-            </div>
-
-        </div>
-
-    `;
-
-
-    statusSection.classList.remove(
-        "d-none"
-    );
-
-}
-
-
-// ==========================================
-// FORMAT DATE
-// ==========================================
-
-function formatDate(dateValue) {
-
-    if (!dateValue) {
-        return "-";
-    }
-
-
-    try {
-
-        return new Date(
-            dateValue
-        ).toLocaleString(
-            "en-IN",
-            {
-                dateStyle: "medium",
-                timeStyle: "short"
-            }
-        );
-
-    } catch (error) {
-
-        return dateValue;
-
-    }
-
-}
-
-
-// ==========================================
-// ERROR MESSAGE
-// ==========================================
-
-function showError(message) {
-
-    applicationError.textContent =
-        message;
-
-    applicationError.classList.remove(
-        "d-none"
-    );
-
-}
-
-
-// ==========================================
 // LOGOUT
 // ==========================================
 
@@ -659,23 +661,13 @@ const logoutButton =
         "logoutButton"
     );
 
-
 if (logoutButton) {
 
     logoutButton.addEventListener(
         "click",
         function () {
 
-            localStorage.removeItem(
-                "token"
-            );
-
-            localStorage.removeItem(
-                "tokenType"
-            );
-
-            window.location.href =
-                "login.html";
+            logout();
 
         }
     );
@@ -692,25 +684,15 @@ const sidebarToggle =
         "sidebarToggle"
     );
 
-
 if (sidebarToggle) {
 
     sidebarToggle.addEventListener(
         "click",
         function () {
 
-            const sidebar =
-                document.getElementById(
-                    "sidebar"
-                );
-
-            if (sidebar) {
-
-                sidebar.classList.toggle(
-                    "show"
-                );
-
-            }
+            document
+                .getElementById("sidebar")
+                .classList.toggle("show");
 
         }
     );
@@ -722,6 +704,12 @@ if (sidebarToggle) {
 // INITIALIZE
 // ==========================================
 
-loadUserInformation();
+async function initializePage() {
 
-loadMyApplications();
+    loadUserInformation();
+
+    await loadMyApplication();
+
+}
+
+initializePage();

@@ -1,5 +1,25 @@
+// ==========================================
+// AUTH & USER ROLE
+// ==========================================
+
 const token = localStorage.getItem("token");
-const currentUserRole = getUserRole();
+
+
+// ==========================================
+// AUTH CHECK
+// ==========================================
+
+if (!token) {
+
+    window.location.href = "login.html";
+
+}
+
+
+// ==========================================
+// GET USER ROLE
+// ==========================================
+
 function getUserRole() {
 
     try {
@@ -18,19 +38,35 @@ function getUserRole() {
 
     } catch (error) {
 
+        console.error("Unable to read user role:", error);
+
         return "";
 
     }
 
 }
 
+
+const currentUserRole = getUserRole();
+
 const isAdmin =
     currentUserRole === "ADMIN" ||
     currentUserRole === "ROLE_ADMIN";
 
+
+// ==========================================
+// ORGANIZATION PERMISSION
+// ==========================================
+
 let isOrganizationOwner = false;
 
 let canManageEmployees = isAdmin;
+
+
+// ==========================================
+// ELEMENTS
+// ==========================================
+
 const userEmail =
     document.getElementById("userEmail");
 
@@ -54,18 +90,7 @@ const searchInput =
 
 
 // ==========================================
-// AUTH CHECK
-// ==========================================
-
-if (!token) {
-
-    window.location.href = "login.html";
-
-}
-
-
-// ==========================================
-// LOAD USER
+// LOAD USER INFORMATION
 // ==========================================
 
 function loadUserInformation() {
@@ -75,7 +100,8 @@ function loadUserInformation() {
         const payload =
             JSON.parse(
                 atob(
-                    token.split(".")[1]
+                    token
+                        .split(".")[1]
                         .replace(/-/g, "+")
                         .replace(/_/g, "/")
                 )
@@ -90,11 +116,15 @@ function loadUserInformation() {
     } catch (error) {
 
         userEmail.textContent = "User";
-        userRole.textContent = "Authenticated";
+
+        userRole.textContent =
+            "Authenticated";
 
     }
 
 }
+
+
 // ==========================================
 // CHECK ORGANIZATION OWNER
 // ==========================================
@@ -103,23 +133,53 @@ async function checkOrganizationOwner() {
 
     // ADMIN can always manage employees
     if (isAdmin) {
+
         isOrganizationOwner = true;
+
         canManageEmployees = true;
+
         return;
+
     }
+
 
     try {
 
-        const data =
-            await apiRequest("/api/organizations/my");
+        /*
+         * IMPORTANT:
+         * apiRequest() already contains /api
+         *
+         * So use:
+         * /organizations/my
+         *
+         * NOT:
+         * /api/organizations/my
+         */
 
-        if (!data) return;
+        const data =
+            await apiRequest(
+                "/organizations/my"
+            );
+
+
+        if (!data) {
+
+            isOrganizationOwner = false;
+
+            canManageEmployees = false;
+
+            return;
+
+        }
+
 
         isOrganizationOwner =
             data.isOwner === true;
 
+
         canManageEmployees =
-            isAdmin || isOrganizationOwner;
+            isOrganizationOwner;
+
 
     } catch (error) {
 
@@ -129,79 +189,11 @@ async function checkOrganizationOwner() {
         );
 
         isOrganizationOwner = false;
+
         canManageEmployees = false;
-    }
-}
-async function apiRequest(url, options = {}) {
-
-    const response = await fetch(url, {
-
-        ...options,
-
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-            ...(options.headers || {})
-        }
-
-    });
-
-    // Authentication / authorization failure
-    if (response.status === 401 ||
-        response.status === 403) {
-
-        localStorage.removeItem("token");
-        localStorage.removeItem("tokenType");
-
-        window.location.href = "login.html";
-
-        return null;
-    }
-
-    // DELETE may return 204 No Content
-    if (response.status === 204) {
-        return null;
-    }
-
-    // Read response as text first
-    const text = await response.text();
-
-    // Empty response body
-    if (!text) {
-
-        if (!response.ok) {
-            throw new Error(
-                `Request failed with status ${response.status}`
-            );
-        }
-
-        return null;
-    }
-
-    let data;
-
-    try {
-        data = JSON.parse(text);
-    } catch (error) {
-
-        if (!response.ok) {
-            throw new Error(
-                `Request failed with status ${response.status}`
-            );
-        }
-
-        return text;
-    }
-
-    if (!response.ok) {
-
-        throw new Error(
-            data.message || "Request failed"
-        );
 
     }
 
-    return data;
 }
 
 
@@ -213,35 +205,80 @@ async function loadEmployees() {
 
     try {
 
-        loadingMessage.classList.remove("d-none");
-        tableContainer.classList.add("d-none");
-        errorMessage.classList.add("d-none");
+        loadingMessage.classList.remove(
+            "d-none"
+        );
+
+        tableContainer.classList.add(
+            "d-none"
+        );
+
+        errorMessage.classList.add(
+            "d-none"
+        );
+
+
+        /*
+         * IMPORTANT:
+         *
+         * apiRequest() already adds /api.
+         *
+         * Therefore:
+         *
+         * /employees
+         *
+         * becomes:
+         *
+         * /api/employees
+         */
 
         const data =
-            await apiRequest("/api/employees");
+            await apiRequest(
+                "/employees"
+            );
 
-        if (!data) return;
+
+        if (!data) {
+
+            return;
+
+        }
+
 
         const employees =
             Array.isArray(data)
                 ? data
                 : data.content || [];
 
-        renderEmployees(employees);
+
+        renderEmployees(
+            employees
+        );
+
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Unable to load employees:",
+            error
+        );
+
 
         errorMessage.textContent =
             error.message ||
             "Unable to load employees.";
 
-        errorMessage.classList.remove("d-none");
+
+        errorMessage.classList.remove(
+            "d-none"
+        );
+
 
     } finally {
 
-        loadingMessage.classList.add("d-none");
+        loadingMessage.classList.add(
+            "d-none"
+        );
 
     }
 
@@ -256,133 +293,173 @@ function renderEmployees(employees) {
 
     employeeTableBody.innerHTML = "";
 
+
     if (employees.length === 0) {
 
         employeeTableBody.innerHTML = `
+
             <tr>
-                <td colspan="7"
+
+                <td
+                    colspan="7"
                     class="text-center text-muted py-5">
 
-                    <i class="bi bi-people fs-2"></i>
+                    <i
+                        class="bi bi-people fs-2">
+                    </i>
 
                     <p class="mt-2 mb-0">
+
                         No employees found
+
                     </p>
 
                 </td>
+
             </tr>
+
         `;
 
     } else {
 
-        employees.forEach(employee => {
+        employees.forEach(
+            employee => {
 
-            const row =
-                document.createElement("tr");
-
-
-            // Status badge
-
-            const statusClass =
-                employee.status === "ACTIVE"
-                    ? "bg-success"
-                    : "bg-secondary";
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
 
 
-            // Role-based action buttons
+                // ==================================
+                // STATUS BADGE
+                // ==================================
 
-            const actionButtons = canManageEmployees
-    ? `
-        <button
-            class="btn btn-outline-primary action-btn me-1"
-            title="Edit"
-            onclick="editEmployee(${employee.id})">
-
-            <i class="bi bi-pencil"></i>
-
-        </button>
-
-        <button
-            class="btn btn-outline-danger action-btn"
-            title="Delete"
-            onclick="deleteEmployee(${employee.id})">
-
-            <i class="bi bi-trash"></i>
-
-        </button>
-      `
-    : `
-        <span class="text-muted">
-            View only
-        </span>
-      `;
+                const statusClass =
+                    employee.status === "ACTIVE"
+                        ? "bg-success"
+                        : "bg-secondary";
 
 
-            row.innerHTML = `
+                // ==================================
+                // ACTION BUTTONS
+                // ==================================
 
-                <td>
+                const actionButtons =
+                    canManageEmployees
 
-                    <div class="employee-name">
+                        ? `
 
-                        ${employee.firstName}
-                        ${employee.lastName}
+                            <button
+                                class="btn btn-outline-primary action-btn me-1"
+                                title="Edit"
+                                onclick="editEmployee(${employee.id})">
 
-                    </div>
+                                <i
+                                    class="bi bi-pencil">
+                                </i>
 
-                    <div class="employee-email">
-
-                        ${employee.email}
-
-                    </div>
-
-                </td>
-
-
-                <td>
-                    ${employee.employeeCode}
-                </td>
+                            </button>
 
 
-                <td>
-                    ${employee.designation}
-                </td>
+                            <button
+                                class="btn btn-outline-danger action-btn"
+                                title="Delete"
+                                onclick="deleteEmployee(${employee.id})">
+
+                                <i
+                                    class="bi bi-trash">
+                                </i>
+
+                            </button>
+
+                          `
+
+                        : `
+
+                            <span class="text-muted">
+                                View only
+                            </span>
+
+                          `;
 
 
-                <td>
-                    ${employee.departmentName}
-                </td>
+                // ==================================
+                // ROW
+                // ==================================
+
+                row.innerHTML = `
+
+                    <td>
+
+                        <div class="employee-name">
+
+                            ${employee.firstName}
+                            ${employee.lastName}
+
+                        </div>
 
 
-                <td>
-                    ₹${Number(employee.salary)
-                        .toLocaleString("en-IN")}
-                </td>
+                        <div class="employee-email">
+
+                            ${employee.email}
+
+                        </div>
+
+                    </td>
 
 
-                <td>
-
-                    <span
-                        class="badge ${statusClass}">
-
-                        ${employee.status}
-
-                    </span>
-
-                </td>
+                    <td>
+                        ${employee.employeeCode}
+                    </td>
 
 
-                <td>
-
-                    ${actionButtons}
-
-                </td>
-
-            `;
+                    <td>
+                        ${employee.designation}
+                    </td>
 
 
-            employeeTableBody.appendChild(row);
+                    <td>
+                        ${employee.departmentName || "-"}
+                    </td>
 
-        });
+
+                    <td>
+
+                        ₹${Number(
+                            employee.salary || 0
+                        ).toLocaleString("en-IN")}
+
+                    </td>
+
+
+                    <td>
+
+                        <span
+                            class="badge ${statusClass}">
+
+                            ${employee.status}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        ${actionButtons}
+
+                    </td>
+
+                `;
+
+
+                employeeTableBody.appendChild(
+                    row
+                );
+
+            }
+        );
 
     }
 
@@ -395,59 +472,95 @@ function renderEmployees(employees) {
 
 
 // ==========================================
-// SEARCH
+// SEARCH EMPLOYEES
 // ==========================================
 
 let searchTimer;
 
-searchInput.addEventListener("input", function () {
 
-    clearTimeout(searchTimer);
+searchInput.addEventListener(
+    "input",
+    function () {
 
-    const firstName =
-        searchInput.value.trim();
+        clearTimeout(
+            searchTimer
+        );
 
-    searchTimer =
-        setTimeout(async () => {
 
-            if (!firstName) {
+        const firstName =
+            searchInput.value.trim();
 
-                await loadEmployees();
 
-                return;
+        searchTimer =
+            setTimeout(
+                async function () {
 
-            }
+                    // --------------------------
+                    // EMPTY SEARCH
+                    // --------------------------
 
-            try {
+                    if (!firstName) {
 
-                const data =
-                    await apiRequest(
-                        `/api/employees/search?name=${encodeURIComponent(firstName)}`
-                     );
+                        await loadEmployees();
 
-                if (!data) return;
+                        return;
 
-                const employees =
-                    Array.isArray(data)
-                        ? data
-                        : data.content || [];
+                    }
 
-                renderEmployees(employees);
 
-            } catch (error) {
+                    try {
 
-                errorMessage.textContent =
-                    error.message;
+                        /*
+                         * Central apiRequest()
+                         * already adds /api
+                         */
 
-                errorMessage.classList.remove(
-                    "d-none"
-                );
+                        const data =
+                            await apiRequest(
+                                `/employees/search?name=${encodeURIComponent(firstName)}`
+                            );
 
-            }
 
-        }, 300);
+                        if (!data) {
 
-});
+                            return;
+
+                        }
+
+
+                        const employees =
+                            Array.isArray(data)
+                                ? data
+                                : data.content || [];
+
+
+                        renderEmployees(
+                            employees
+                        );
+
+
+                    } catch (error) {
+
+                        console.error(error);
+
+
+                        errorMessage.textContent =
+                            error.message ||
+                            "Unable to search employees.";
+
+
+                        errorMessage.classList.remove(
+                            "d-none"
+                        );
+
+                    }
+
+                },
+                300
+            );
+
+    }
+);
 
 
 // ==========================================
@@ -456,219 +569,392 @@ searchInput.addEventListener("input", function () {
 
 const addEmployeeModal =
     new bootstrap.Modal(
-        document.getElementById("addEmployeeModal")
+        document.getElementById(
+            "addEmployeeModal"
+        )
     );
 
-document
-    .getElementById("addEmployeeButton")
-    .addEventListener("click", async function () {
 
-        document
-            .getElementById("addEmployeeForm")
-            .reset();
+const addEmployeeButton =
+    document.getElementById(
+        "addEmployeeButton"
+    );
 
-        document
-            .getElementById("addEmployeeError")
-            .classList.add("d-none");
 
-        await loadDepartmentsForForm();
+if (addEmployeeButton) {
 
-        addEmployeeModal.show();
+    addEmployeeButton.addEventListener(
+        "click",
+        async function () {
 
-    });
-    
-    // ==========================================
-// LOAD DEPARTMENTS FOR ADD EMPLOYEE FORM
+            document
+                .getElementById(
+                    "addEmployeeForm"
+                )
+                .reset();
+
+
+            document
+                .getElementById(
+                    "addEmployeeError"
+                )
+                .classList.add(
+                    "d-none"
+                );
+
+
+            await loadDepartmentsForForm();
+
+
+            addEmployeeModal.show();
+
+        }
+    );
+
+}
+
+
+// ==========================================
+// LOAD DEPARTMENTS FOR ADD EMPLOYEE
 // ==========================================
 
 async function loadDepartmentsForForm() {
 
     const departmentSelect =
-        document.getElementById("departmentId");
+        document.getElementById(
+            "departmentId"
+        );
+
 
     try {
 
         departmentSelect.innerHTML = `
+
             <option value="">
                 Loading departments...
             </option>
+
         `;
 
-        const data =
-            await apiRequest("/api/departments");
 
-        if (!data) return;
+        /*
+         * Correct:
+         * /departments
+         *
+         * apiRequest() adds /api
+         */
+
+        const data =
+            await apiRequest(
+                "/departments"
+            );
+
+
+        if (!data) {
+
+            return;
+
+        }
+
 
         const departments =
             Array.isArray(data)
                 ? data
                 : data.content || [];
 
+
         departmentSelect.innerHTML = `
+
             <option value="">
                 Select Department
             </option>
+
         `;
 
-        departments.forEach(department => {
 
-            const option =
-                document.createElement("option");
+        departments.forEach(
+            department => {
 
-            option.value = department.id;
+                const option =
+                    document.createElement(
+                        "option"
+                    );
 
-            option.textContent =
-                department.departmentName;
 
-            departmentSelect.appendChild(option);
+                option.value =
+                    department.id;
 
-        });
+
+                option.textContent =
+                    department.departmentName;
+
+
+                departmentSelect.appendChild(
+                    option
+                );
+
+            }
+        );
+
 
     } catch (error) {
 
+        console.error(
+            "Unable to load departments:",
+            error
+        );
+
+
         departmentSelect.innerHTML = `
+
             <option value="">
                 Unable to load departments
             </option>
-        `;
 
-        console.error(error);
+        `;
 
     }
 
 }
+
+
 // ==========================================
 // CREATE EMPLOYEE
 // ==========================================
 
 document
-    .getElementById("addEmployeeForm")
-    .addEventListener("submit", async function (event) {
+    .getElementById(
+        "addEmployeeForm"
+    )
+    .addEventListener(
+        "submit",
+        async function (event) {
 
-        event.preventDefault();
+            event.preventDefault();
 
-        const saveButton =
-            document.getElementById("saveEmployeeButton");
 
-        const errorBox =
-            document.getElementById("addEmployeeError");
+            const saveButton =
+                document.getElementById(
+                    "saveEmployeeButton"
+                );
 
-        errorBox.classList.add("d-none");
 
-        saveButton.disabled = true;
+            const errorBox =
+                document.getElementById(
+                    "addEmployeeError"
+                );
 
-        saveButton.innerHTML = `
-            <span
-                class="spinner-border spinner-border-sm me-1">
-            </span>
-            Saving...
-        `;
 
-        const departmentId =
-    document.getElementById("departmentId").value;
-
-if (!departmentId) {
-
-    errorBox.textContent =
-        "Please select a department.";
-
-    errorBox.classList.remove("d-none");
-
-    saveButton.disabled = false;
-
-    saveButton.innerHTML = `
-        <i class="bi bi-check-lg"></i>
-        Save Employee
-    `;
-
-    return;
-}
-
-const employeeData = {
-
-    employeeCode:
-        document.getElementById("employeeCode").value.trim(),
-
-    firstName:
-        document.getElementById("firstName").value.trim(),
-
-    lastName:
-        document.getElementById("lastName").value.trim(),
-
-    email:
-        document.getElementById("employeeEmail").value.trim(),
-
-    phone:
-        document.getElementById("phone").value.trim(),
-
-    gender:
-        document.getElementById("gender").value,
-
-    designation:
-        document.getElementById("designation").value,
-
-    salary:
-        Number(document.getElementById("salary").value),
-
-    joiningDate:
-        document.getElementById("joiningDate").value,
-
-    status:
-        document.getElementById("status").value,
-
-    departmentId:
-        Number(departmentId)
-};
-
-        try {
-
-            await apiRequest(
-                "/api/employees",
-                {
-                    method: "POST",
-                    body: JSON.stringify(employeeData)
-                }
+            errorBox.classList.add(
+                "d-none"
             );
 
-            addEmployeeModal.hide();
 
-            alert(
-                "Employee created successfully!"
-            );
+            const departmentId =
+                document.getElementById(
+                    "departmentId"
+                ).value;
 
-            await loadEmployees();
 
-        } catch (error) {
+            if (!departmentId) {
 
-            console.error(error);
+                errorBox.textContent =
+                    "Please select a department.";
 
-            errorBox.textContent =
-                error.message ||
-                "Unable to create employee.";
 
-            errorBox.classList.remove("d-none");
+                errorBox.classList.remove(
+                    "d-none"
+                );
 
-        } finally {
 
-            saveButton.disabled = false;
+                return;
+
+            }
+
+
+            saveButton.disabled = true;
+
 
             saveButton.innerHTML = `
-                <i class="bi bi-check-lg"></i>
-                Save Employee
+
+                <span
+                    class="spinner-border spinner-border-sm me-1">
+                </span>
+
+                Saving...
+
             `;
 
-        }
 
-    });
+            const employeeData = {
+
+                employeeCode:
+                    document
+                        .getElementById(
+                            "employeeCode"
+                        )
+                        .value
+                        .trim(),
+
+
+                firstName:
+                    document
+                        .getElementById(
+                            "firstName"
+                        )
+                        .value
+                        .trim(),
+
+
+                lastName:
+                    document
+                        .getElementById(
+                            "lastName"
+                        )
+                        .value
+                        .trim(),
+
+
+                email:
+                    document
+                        .getElementById(
+                            "employeeEmail"
+                        )
+                        .value
+                        .trim(),
+
+
+                phone:
+                    document
+                        .getElementById(
+                            "phone"
+                        )
+                        .value
+                        .trim(),
+
+
+                gender:
+                    document
+                        .getElementById(
+                            "gender"
+                        )
+                        .value,
+
+
+                designation:
+                    document
+                        .getElementById(
+                            "designation"
+                        )
+                        .value,
+
+
+                salary:
+                    Number(
+                        document
+                            .getElementById(
+                                "salary"
+                            )
+                            .value
+                    ),
+
+
+                joiningDate:
+                    document
+                        .getElementById(
+                            "joiningDate"
+                        )
+                        .value,
+
+
+                status:
+                    document
+                        .getElementById(
+                            "status"
+                        )
+                        .value,
+
+
+                departmentId:
+                    Number(
+                        departmentId
+                    )
+
+            };
+
+
+            try {
+
+                await apiRequest(
+                    "/employees",
+                    {
+                        method: "POST",
+
+                        body:
+                            JSON.stringify(
+                                employeeData
+                            )
+                    }
+                );
+
+
+                addEmployeeModal.hide();
+
+
+                alert(
+                    "Employee created successfully!"
+                );
+
+
+                await loadEmployees();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+
+                errorBox.textContent =
+                    error.message ||
+                    "Unable to create employee.";
+
+
+                errorBox.classList.remove(
+                    "d-none"
+                );
+
+
+            } finally {
+
+                saveButton.disabled = false;
+
+
+                saveButton.innerHTML = `
+
+                    <i class="bi bi-check-lg"></i>
+
+                    Save Employee
+
+                `;
+
+            }
+
+        }
+    );
+
+
 // ==========================================
-// EDIT EMPLOYEE MODAL
+// EDIT EMPLOYEE
 // ==========================================
 
 let editingEmployeeId = null;
 
+
 const editEmployeeModal =
     new bootstrap.Modal(
-        document.getElementById("editEmployeeModal")
+        document.getElementById(
+            "editEmployeeModal"
+        )
     );
 
 
@@ -680,95 +966,148 @@ async function editEmployee(id) {
 
     editingEmployeeId = id;
 
-    const errorBox =
-        document.getElementById("editEmployeeError");
 
-    errorBox.classList.add("d-none");
+    const errorBox =
+        document.getElementById(
+            "editEmployeeError"
+        );
+
+
+    errorBox.classList.add(
+        "d-none"
+    );
+
 
     try {
 
-        // Show loading state
-
         document
-            .getElementById("editEmployeeCode")
-            .value = "Loading...";
+            .getElementById(
+                "editEmployeeCode"
+            )
+            .value =
+                "Loading...";
 
-
-        // Get employee by ID
 
         const employee =
             await apiRequest(
-                `/api/employees/${id}`
+                `/employees/${id}`
             );
 
-        if (!employee) return;
 
+        if (!employee) {
 
-        // Load departments
+            return;
+
+        }
+
 
         await loadDepartmentsForEdit(
             employee.departmentName
         );
 
 
-        // Fill form
+        document
+            .getElementById(
+                "editEmployeeCode"
+            )
+            .value =
+                employee.employeeCode;
+
 
         document
-            .getElementById("editEmployeeCode")
-            .value = employee.employeeCode;
+            .getElementById(
+                "editFirstName"
+            )
+            .value =
+                employee.firstName;
+
 
         document
-            .getElementById("editFirstName")
-            .value = employee.firstName;
+            .getElementById(
+                "editLastName"
+            )
+            .value =
+                employee.lastName;
+
 
         document
-            .getElementById("editLastName")
-            .value = employee.lastName;
+            .getElementById(
+                "editEmployeeEmail"
+            )
+            .value =
+                employee.email;
+
 
         document
-            .getElementById("editEmployeeEmail")
-            .value = employee.email;
+            .getElementById(
+                "editPhone"
+            )
+            .value =
+                employee.phone;
+
 
         document
-            .getElementById("editPhone")
-            .value = employee.phone;
+            .getElementById(
+                "editGender"
+            )
+            .value =
+                employee.gender;
+
 
         document
-            .getElementById("editGender")
-            .value = employee.gender;
+            .getElementById(
+                "editDesignation"
+            )
+            .value =
+                employee.designation;
+
 
         document
-            .getElementById("editDesignation")
-            .value = employee.designation;
+            .getElementById(
+                "editSalary"
+            )
+            .value =
+                employee.salary;
+
 
         document
-            .getElementById("editSalary")
-            .value = employee.salary;
+            .getElementById(
+                "editJoiningDate"
+            )
+            .value =
+                employee.joiningDate;
+
 
         document
-            .getElementById("editJoiningDate")
-            .value = employee.joiningDate;
-
-        document
-            .getElementById("editStatus")
-            .value = employee.status;
+            .getElementById(
+                "editStatus"
+            )
+            .value =
+                employee.status;
 
 
         editEmployeeModal.show();
+
 
     } catch (error) {
 
         console.error(error);
 
+
         errorBox.textContent =
             error.message ||
             "Unable to load employee.";
 
-        errorBox.classList.remove("d-none");
+
+        errorBox.classList.remove(
+            "d-none"
+        );
 
     }
 
 }
+
+
 // ==========================================
 // LOAD DEPARTMENTS FOR EDIT
 // ==========================================
@@ -778,239 +1117,331 @@ async function loadDepartmentsForEdit(
 ) {
 
     const departmentSelect =
-        document.getElementById("editDepartmentId");
+        document.getElementById(
+            "editDepartmentId"
+        );
+
 
     departmentSelect.innerHTML = `
+
         <option value="">
             Loading departments...
         </option>
+
     `;
 
-    const data =
-        await apiRequest("/api/departments");
 
-    if (!data) return;
+    try {
 
-    const departments =
-        Array.isArray(data)
-            ? data
-            : data.content || [];
+        const data =
+            await apiRequest(
+                "/departments"
+            );
 
-    departmentSelect.innerHTML = `
-        <option value="">
-            Select Department
-        </option>
-    `;
 
-    departments.forEach(department => {
+        if (!data) {
 
-        const option =
-            document.createElement("option");
+            return;
 
-        option.value = department.id;
-
-        option.textContent =
-            department.departmentName;
-
-        if (
-            department.departmentName ===
-            currentDepartmentName
-        ) {
-            option.selected = true;
         }
 
-        departmentSelect.appendChild(option);
 
-    });
+        const departments =
+            Array.isArray(data)
+                ? data
+                : data.content || [];
+
+
+        departmentSelect.innerHTML = `
+
+            <option value="">
+                Select Department
+            </option>
+
+        `;
+
+
+        departments.forEach(
+            department => {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    department.id;
+
+
+                option.textContent =
+                    department.departmentName;
+
+
+                if (
+                    department.departmentName ===
+                    currentDepartmentName
+                ) {
+
+                    option.selected = true;
+
+                }
+
+
+                departmentSelect.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load departments:",
+            error
+        );
+
+
+        departmentSelect.innerHTML = `
+
+            <option value="">
+                Unable to load departments
+            </option>
+
+        `;
+
+    }
 
 }
+
+
 // ==========================================
 // UPDATE EMPLOYEE
 // ==========================================
 
 document
-    .getElementById("editEmployeeForm")
-    .addEventListener("submit", async function (event) {
+    .getElementById(
+        "editEmployeeForm"
+    )
+    .addEventListener(
+        "submit",
+        async function (event) {
 
-        event.preventDefault();
-
-        if (!editingEmployeeId) {
-            return;
-        }
-
-        const errorBox =
-            document.getElementById(
-                "editEmployeeError"
-            );
-
-        const updateButton =
-            document.getElementById(
-                "updateEmployeeButton"
-            );
-
-        const departmentId =
-            document.getElementById(
-                "editDepartmentId"
-            ).value;
+            event.preventDefault();
 
 
-        // Validate department
+            if (!editingEmployeeId) {
 
-        if (!departmentId) {
+                return;
 
-            errorBox.textContent =
-                "Please select a department.";
-
-            errorBox.classList.remove(
-                "d-none"
-            );
-
-            return;
-        }
+            }
 
 
-        updateButton.disabled = true;
-
-        updateButton.innerHTML = `
-            <span
-                class="spinner-border spinner-border-sm me-1">
-            </span>
-            Updating...
-        `;
+            const errorBox =
+                document.getElementById(
+                    "editEmployeeError"
+                );
 
 
-        const employeeData = {
-
-            employeeCode:
-                document
-                    .getElementById(
-                        "editEmployeeCode"
-                    )
-                    .value
-                    .trim(),
-
-            firstName:
-                document
-                    .getElementById(
-                        "editFirstName"
-                    )
-                    .value
-                    .trim(),
-
-            lastName:
-                document
-                    .getElementById(
-                        "editLastName"
-                    )
-                    .value
-                    .trim(),
-
-            email:
-                document
-                    .getElementById(
-                        "editEmployeeEmail"
-                    )
-                    .value
-                    .trim(),
-
-            phone:
-                document
-                    .getElementById(
-                        "editPhone"
-                    )
-                    .value
-                    .trim(),
-
-            gender:
-                document
-                    .getElementById(
-                        "editGender"
-                    )
-                    .value,
-
-            designation:
-                document
-                    .getElementById(
-                        "editDesignation"
-                    )
-                    .value,
-
-            salary:
-                Number(
-                    document
-                        .getElementById(
-                            "editSalary"
-                        )
-                        .value
-                ),
-
-            joiningDate:
-                document
-                    .getElementById(
-                        "editJoiningDate"
-                    )
-                    .value,
-
-            status:
-                document
-                    .getElementById(
-                        "editStatus"
-                    )
-                    .value,
-
-            departmentId:
-                Number(departmentId)
-
-        };
+            const updateButton =
+                document.getElementById(
+                    "updateEmployeeButton"
+                );
 
 
-        try {
-
-            await apiRequest(
-                `/api/employees/${editingEmployeeId}`,
-                {
-                    method: "PUT",
-                    body: JSON.stringify(
-                        employeeData
-                    )
-                }
-            );
+            const departmentId =
+                document.getElementById(
+                    "editDepartmentId"
+                ).value;
 
 
-            editEmployeeModal.hide();
+            if (!departmentId) {
 
-            alert(
-                "Employee updated successfully!"
-            );
-
-
-            await loadEmployees();
+                errorBox.textContent =
+                    "Please select a department.";
 
 
-        } catch (error) {
+                errorBox.classList.remove(
+                    "d-none"
+                );
 
-            console.error(error);
 
-            errorBox.textContent =
-                error.message ||
-                "Unable to update employee.";
+                return;
 
-            errorBox.classList.remove(
-                "d-none"
-            );
+            }
 
-        } finally {
 
-            updateButton.disabled = false;
+            updateButton.disabled = true;
+
 
             updateButton.innerHTML = `
-                <i class="bi bi-check-lg"></i>
-                Update Employee
+
+                <span
+                    class="spinner-border spinner-border-sm me-1">
+                </span>
+
+                Updating...
+
             `;
 
-        }
 
-    });
+            const employeeData = {
+
+                employeeCode:
+                    document
+                        .getElementById(
+                            "editEmployeeCode"
+                        )
+                        .value
+                        .trim(),
+
+
+                firstName:
+                    document
+                        .getElementById(
+                            "editFirstName"
+                        )
+                        .value
+                        .trim(),
+
+
+                lastName:
+                    document
+                        .getElementById(
+                            "editLastName"
+                        )
+                        .value
+                        .trim(),
+
+
+                email:
+                    document
+                        .getElementById(
+                            "editEmployeeEmail"
+                        )
+                        .value
+                        .trim(),
+
+
+                phone:
+                    document
+                        .getElementById(
+                            "editPhone"
+                        )
+                        .value
+                        .trim(),
+
+
+                gender:
+                    document
+                        .getElementById(
+                            "editGender"
+                        )
+                        .value,
+
+
+                designation:
+                    document
+                        .getElementById(
+                            "editDesignation"
+                        )
+                        .value,
+
+
+                salary:
+                    Number(
+                        document
+                            .getElementById(
+                                "editSalary"
+                            )
+                            .value
+                    ),
+
+
+                joiningDate:
+                    document
+                        .getElementById(
+                            "editJoiningDate"
+                        )
+                        .value,
+
+
+                status:
+                    document
+                        .getElementById(
+                            "editStatus"
+                        )
+                        .value,
+
+
+                departmentId:
+                    Number(
+                        departmentId
+                    )
+
+            };
+
+
+            try {
+
+                await apiRequest(
+                    `/employees/${editingEmployeeId}`,
+                    {
+                        method: "PUT",
+
+                        body:
+                            JSON.stringify(
+                                employeeData
+                            )
+                    }
+                );
+
+
+                editEmployeeModal.hide();
+
+
+                alert(
+                    "Employee updated successfully!"
+                );
+
+
+                await loadEmployees();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+
+                errorBox.textContent =
+                    error.message ||
+                    "Unable to update employee.";
+
+
+                errorBox.classList.remove(
+                    "d-none"
+                );
+
+
+            } finally {
+
+                updateButton.disabled = false;
+
+
+                updateButton.innerHTML = `
+
+                    <i class="bi bi-check-lg"></i>
+
+                    Update Employee
+
+                `;
+
+            }
+
+        }
+    );
 
 
 // ==========================================
@@ -1024,15 +1455,18 @@ async function deleteEmployee(id) {
             "Are you sure you want to delete this employee?"
         );
 
+
     if (!confirmed) {
+
         return;
+
     }
 
 
     try {
 
         await apiRequest(
-            `/api/employees/${id}`,
+            `/employees/${id}`,
             {
                 method: "DELETE"
             }
@@ -1051,6 +1485,7 @@ async function deleteEmployee(id) {
 
         console.error(error);
 
+
         alert(
             error.message ||
             "Unable to delete employee."
@@ -1066,16 +1501,27 @@ async function deleteEmployee(id) {
 // ==========================================
 
 document
-    .getElementById("logoutButton")
-    .addEventListener("click", function () {
+    .getElementById(
+        "logoutButton"
+    )
+    .addEventListener(
+        "click",
+        function () {
 
-        localStorage.removeItem("token");
-        localStorage.removeItem("tokenType");
+            localStorage.removeItem(
+                "token"
+            );
 
-        window.location.href =
-            "login.html";
+            localStorage.removeItem(
+                "tokenType"
+            );
 
-    });
+
+            window.location.href =
+                "login.html";
+
+        }
+    );
 
 
 // ==========================================
@@ -1083,14 +1529,23 @@ document
 // ==========================================
 
 document
-    .getElementById("sidebarToggle")
-    .addEventListener("click", function () {
+    .getElementById(
+        "sidebarToggle"
+    )
+    .addEventListener(
+        "click",
+        function () {
 
-        document
-            .getElementById("sidebar")
-            .classList.toggle("show");
+            document
+                .getElementById(
+                    "sidebar"
+                )
+                .classList.toggle(
+                    "show"
+                );
 
-    });
+        }
+    );
 
 
 // ==========================================
@@ -1101,13 +1556,13 @@ async function initializePage() {
 
     loadUserInformation();
 
+
     await checkOrganizationOwner();
 
-    // Update Add Employee button
-    const addEmployeeButton =
-        document.getElementById(
-            "addEmployeeButton"
-        );
+
+    // --------------------------------------
+    // ADD EMPLOYEE BUTTON
+    // --------------------------------------
 
     if (addEmployeeButton) {
 
@@ -1115,9 +1570,17 @@ async function initializePage() {
             canManageEmployees
                 ? ""
                 : "none";
+
     }
 
+
+    // --------------------------------------
+    // LOAD EMPLOYEES
+    // --------------------------------------
+
     await loadEmployees();
+
 }
+
 
 initializePage();

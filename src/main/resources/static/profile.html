@@ -118,7 +118,9 @@
 <div class="main-content">
 
 
-    <!-- TOP NAVBAR -->
+    <!-- ==========================================
+         TOP NAVBAR
+         ========================================== -->
 
     <nav class="top-navbar">
 
@@ -156,7 +158,9 @@
         <div class="content-card profile-card">
 
 
-            <!-- PROFILE HEADER -->
+            <!-- ==========================================
+                 PROFILE HEADER
+                 ========================================== -->
 
             <div class="profile-header">
 
@@ -198,7 +202,9 @@
             <hr>
 
 
-            <!-- ACCOUNT INFORMATION -->
+            <!-- ==========================================
+                 ACCOUNT INFORMATION
+                 ========================================== -->
 
             <h5 class="mb-4">
                 Account Information
@@ -207,6 +213,8 @@
 
             <div class="row g-4">
 
+
+                <!-- FIRST NAME -->
 
                 <div class="col-md-6">
 
@@ -225,6 +233,8 @@
                 </div>
 
 
+                <!-- LAST NAME -->
+
                 <div class="col-md-6">
 
                     <label class="profile-label">
@@ -242,6 +252,8 @@
                 </div>
 
 
+                <!-- EMAIL -->
+
                 <div class="col-md-6">
 
                     <label class="profile-label">
@@ -258,6 +270,8 @@
 
                 </div>
 
+
+                <!-- ROLE -->
 
                 <div class="col-md-6">
 
@@ -277,6 +291,207 @@
 
             </div>
 
+
+            <!-- ==========================================
+                 ORGANIZATION INFORMATION
+                 ========================================== -->
+
+            <hr class="my-4">
+
+
+            <h5 class="mb-4">
+                Organization Information
+            </h5>
+
+
+            <div class="row g-4">
+
+
+                <!-- ORGANIZATION NAME -->
+
+                <div class="col-md-6">
+
+                    <label class="profile-label">
+                        Organization Name
+                    </label>
+
+                    <div
+                        id="profileOrganizationName"
+                        class="profile-value">
+
+                        -
+
+                    </div>
+
+                </div>
+
+
+                <!-- ORGANIZATION TYPE -->
+
+                <div class="col-md-6">
+
+                    <label class="profile-label">
+                        Organization Type
+                    </label>
+
+                    <div
+                        id="profileOrganizationType"
+                        class="profile-value">
+
+                        -
+
+                    </div>
+
+                </div>
+
+
+                <!-- ORGANIZATION ID -->
+
+                <div class="col-md-6">
+
+                    <label class="profile-label">
+                        Organization ID
+                    </label>
+
+                    <div
+                        id="profileOrganizationId"
+                        class="profile-value">
+
+                        -
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==========================================
+                 CHANGE PASSWORD
+                 ========================================== -->
+
+            <hr class="my-4">
+
+
+            <h5 class="mb-2">
+                Change Password
+            </h5>
+
+            <p class="text-muted mb-4">
+                Update your account password securely.
+            </p>
+
+
+            <form id="changePasswordForm">
+
+
+                <!-- CURRENT PASSWORD -->
+
+                <div class="row">
+
+                    <div class="col-md-8">
+
+                        <div class="mb-3">
+
+                            <label
+                                for="currentPassword"
+                                class="form-label">
+
+                                Current Password
+
+                            </label>
+
+                            <input
+                                type="password"
+                                id="currentPassword"
+                                class="form-control"
+                                placeholder="Enter current password"
+                                required>
+
+                        </div>
+
+
+                        <!-- NEW PASSWORD -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="newPassword"
+                                class="form-label">
+
+                                New Password
+
+                            </label>
+
+                            <input
+                                type="password"
+                                id="newPassword"
+                                class="form-control"
+                                placeholder="Enter new password"
+                                minlength="6"
+                                required>
+
+                            <small class="text-muted">
+                                Minimum 6 characters.
+                            </small>
+
+                        </div>
+
+
+                        <!-- CONFIRM PASSWORD -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="confirmPassword"
+                                class="form-label">
+
+                                Confirm New Password
+
+                            </label>
+
+                            <input
+                                type="password"
+                                id="confirmPassword"
+                                class="form-control"
+                                placeholder="Confirm new password"
+                                minlength="6"
+                                required>
+
+                        </div>
+
+
+                        <!-- MESSAGE -->
+
+                        <div
+                            id="passwordMessage"
+                            class="small mb-3 d-none">
+                        </div>
+
+
+                        <!-- BUTTON -->
+
+                        <button
+                            type="submit"
+                            id="changePasswordButton"
+                            class="btn btn-primary">
+
+                            <i class="bi bi-shield-lock me-1"></i>
+
+                            Change Password
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+
+            <!-- ==========================================
+                 ACTIONS
+                 ========================================== -->
 
             <hr class="my-4">
 
@@ -302,6 +517,10 @@
 
 </div>
 
+
+<!-- ==========================================
+     JAVASCRIPT
+     ========================================== -->
 
 <script src="js/profile.js"></script>
 

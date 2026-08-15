@@ -108,122 +108,6 @@ function loadUserInformation() {
 
 
 // ==========================================
-// API REQUEST
-// ==========================================
-
-async function apiRequest(
-    url,
-    options = {}
-) {
-
-    const response =
-        await fetch(url, {
-
-            ...options,
-
-            headers: {
-
-                "Content-Type":
-                    "application/json",
-
-                "Authorization":
-                    `Bearer ${token}`,
-
-                ...(options.headers || {})
-
-            }
-
-        });
-
-
-    // Unauthorized / Forbidden
-
-    if (
-        response.status === 401 ||
-        response.status === 403
-    ) {
-
-        localStorage.removeItem("token");
-
-        localStorage.removeItem(
-            "tokenType"
-        );
-
-        window.location.href =
-            "login.html";
-
-        return null;
-
-    }
-
-
-    // No content
-
-    if (response.status === 204) {
-
-        return null;
-
-    }
-
-
-    const text =
-        await response.text();
-
-
-    // Empty response
-
-    if (!text) {
-
-        if (!response.ok) {
-
-            throw new Error(
-                `Request failed with status ${response.status}`
-            );
-
-        }
-
-        return null;
-
-    }
-
-
-    let data;
-
-    try {
-
-        data =
-            JSON.parse(text);
-
-    } catch (error) {
-
-        if (!response.ok) {
-
-            throw new Error(
-                `Request failed with status ${response.status}`
-            );
-
-        }
-
-        return text;
-
-    }
-
-
-    if (!response.ok) {
-
-        throw new Error(
-            data.message ||
-            "Request failed"
-        );
-
-    }
-
-
-    return data;
-
-}
-
-// ==========================================
 // CHECK ORGANIZATION OWNER
 // ==========================================
 
@@ -240,7 +124,7 @@ async function checkOrganizationOwner() {
 
         const data =
             await apiRequest("/api/organizations/my");
-
+        console.log("MY ORGANIZATION RESPONSE:", data);
         if (!data) {
             return;
         }

@@ -1,16 +1,22 @@
 package com.employee.management.controller;
 
+import com.employee.management.dto.OrganizationResponse;
+import com.employee.management.dto.OrganizationUpdateRequest;
 import com.employee.management.entity.Organization;
 import com.employee.management.entity.User;
-import com.employee.management.exception.ResourceNotFoundException;
-import com.employee.management.repository.OrganizationRepository;
+import com.employee.management.service.OrganizationService;
+
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -18,7 +24,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class OrganizationController {
 
-    private final OrganizationRepository organizationRepository;
+    private final OrganizationService organizationService;
 
 
     // ==========================================
@@ -33,43 +39,11 @@ public class OrganizationController {
                 (User) authentication.getPrincipal();
 
         Organization organization =
-                organizationRepository
-                        .findByOwnerId(user.getId())
-                        .orElse(null);
+                organizationService.getMyOrganization(user);
 
 
         Map<String, Object> response =
                 new HashMap<>();
-
-
-        // ==========================================
-        // USER DOES NOT OWN AN ORGANIZATION
-        // ==========================================
-
-        if (organization == null) {
-
-            response.put(
-                    "hasOrganization",
-                    false
-            );
-
-            response.put(
-                    "isOwner",
-                    false
-            );
-
-            response.put(
-                    "organization",
-                    null
-            );
-
-            return ResponseEntity.ok(response);
-        }
-
-
-        // ==========================================
-        // USER OWNS ORGANIZATION
-        // ==========================================
 
         response.put(
                 "hasOrganization",
@@ -80,6 +54,7 @@ public class OrganizationController {
                 "isOwner",
                 true
         );
+
 
         Map<String, Object> organizationData =
                 new HashMap<>();
@@ -104,11 +79,103 @@ public class OrganizationController {
                 organization.getOwner().getId()
         );
 
+        organizationData.put(
+                "createdAt",
+                organization.getCreatedAt()
+        );
+
+
         response.put(
                 "organization",
                 organizationData
         );
 
+
         return ResponseEntity.ok(response);
+    }
+
+
+    // ==========================================
+    // UPDATE MY ORGANIZATION
+    // ==========================================
+
+    @PutMapping("/my")
+    public ResponseEntity<Map<String, Object>>
+    updateMyOrganization(
+            Authentication authentication,
+            @Valid @RequestBody OrganizationUpdateRequest request) {
+
+        User user =
+                (User) authentication.getPrincipal();
+
+
+        Organization organization =
+                organizationService.updateMyOrganization(
+                        user,
+                        request
+                );
+
+
+        Map<String, Object> response =
+                new HashMap<>();
+
+
+        response.put(
+                "message",
+                "Organization updated successfully."
+        );
+
+
+        Map<String, Object> organizationData =
+                new HashMap<>();
+
+        organizationData.put(
+                "id",
+                organization.getId()
+        );
+
+        organizationData.put(
+                "name",
+                organization.getName()
+        );
+
+        organizationData.put(
+                "type",
+                organization.getType()
+        );
+
+        organizationData.put(
+                "ownerId",
+                organization.getOwner().getId()
+        );
+
+        organizationData.put(
+                "createdAt",
+                organization.getCreatedAt()
+        );
+
+
+        response.put(
+                "organization",
+                organizationData
+        );
+
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    // ==========================================
+    // GET ALL ORGANIZATIONS - ADMIN
+    // ==========================================
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<OrganizationResponse>>
+    getAllOrganizations() {
+
+        return ResponseEntity.ok(
+                organizationService.getAllOrganizations()
+        );
     }
 }
