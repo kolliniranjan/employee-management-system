@@ -46,6 +46,7 @@ private static final String[] PUBLIC_ENDPOINTS = {
         // ==========================================
 
         "/",
+        "/index.html",
         "/login.html",
         "/register.html",
         "/dashboard.html",
